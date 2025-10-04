@@ -1,4 +1,4 @@
-# app.py
+# app_stockinfo.py
 from flask import Flask, render_template, request, jsonify
 from elasticsearch import Elasticsearch
 import math
@@ -7,20 +7,16 @@ import math
 app = Flask(__name__)
 
 # Elasticsearch连接配置
-from elasticsearch import Elasticsearch
-
 es = Elasticsearch(
     hosts=[{
         'host': '10.0.0.215',
         'port': 9200,
         'scheme': 'http'
-    }],
-    verify_certs=False,
-    api_key=('api_key_id', 'api_key_secret')  # 如果使用API密钥
+    }]
 )
 
 # 索引名称
-INDEX_NAME = 'ticaixifen'
+INDEX_NAME = 'stockinfo'
 
 
 @app.route('/')
@@ -36,25 +32,92 @@ def search():
     query = request.args.get('q', '').strip()
     page = int(request.args.get('page', 1))
     size = int(request.args.get('size', 10))
+    search_type = request.args.get('type', 'fulltext')  # 查询类型: fulltext(全文) 或 precise(精准)
+    field_filter = request.args.get('field', 'all')  # 字段过滤
 
     # 构建Elasticsearch查询
     if query:
-        # 如果有查询词，进行全文搜索
-        search_body = {
-            "query": {
-                "multi_match": {
-                    "query": query,
-                    "fields": ["题干", "选项 A", "选项 B", "选项 C", "选项 D",
-                               "选项 E", "选项 F", "选项 G", "选项 H", "解析"]
+        if search_type == 'precise':
+            # 精准查询 - 使用term查询
+            if field_filter != 'all':
+                # 指定字段精准查询
+                search_body = {
+                    "query": {
+                        "term": {f"{field_filter}.keyword": query}
+                    }
                 }
-            },
-            "highlight": {
-                "fields": {
-                    "题干": {},
-                    "解析": {}
+            else:
+                # 多字段精准查询
+                search_body = {
+                    "query": {
+                        "bool": {
+                            "should": [
+                                {"term": {"题干.keyword": query}},
+                                {"term": {"选项 A.keyword": query}},
+                                {"term": {"选项 B.keyword": query}},
+                                {"term": {"选项 C.keyword": query}},
+                                {"term": {"选项 D.keyword": query}},
+                                {"term": {"选项 E.keyword": query}},
+                                {"term": {"选项 F.keyword": query}},
+                                {"term": {"选项 G.keyword": query}},
+                                {"term": {"选项 H.keyword": query}},
+                                {"term": {"答案.keyword": query}},
+                                {"term": {"标签.keyword": query}},
+                                {"term": {"解析.keyword": query}}
+                            ],
+                            "minimum_should_match": 1
+                        }
+                    }
                 }
-            }
-        }
+        else:
+            # 全文搜索 - 使用multi_match查询
+            if field_filter != 'all':
+                # 指定字段搜索
+                search_body = {
+                    "query": {
+                        "match": {
+                            field_filter: {
+                                "query": query,
+                                "operator": "and"
+                            }
+                        }
+                    },
+                    "highlight": {
+                        "pre_tags": ["<span class='highlight'>"],
+                        "post_tags": ["</span>"],
+                        "fields": {
+                            field_filter: {}
+                        }
+                    }
+                }
+            else:
+                # 全字段搜索
+                search_body = {
+                    "query": {
+                        "multi_match": {
+                            "query": query,
+                            "fields": ["题干", "选项 A", "选项 B", "选项 C", "选项 D",
+                                       "选项 E", "选项 F", "选项 G", "选项 H", "解析"],
+                            "operator": "and"
+                        }
+                    },
+                    "highlight": {
+                        "pre_tags": ["<span class='highlight'>"],
+                        "post_tags": ["</span>"],
+                        "fields": {
+                            "题干": {},
+                            "选项 A": {},
+                            "选项 B": {},
+                            "选项 C": {},
+                            "选项 D": {},
+                            "选项 E": {},
+                            "选项 F": {},
+                            "选项 G": {},
+                            "选项 H": {},
+                            "解析": {}
+                        }
+                    }
+                }
     else:
         # 如果没有查询词，返回所有文档
         search_body = {
@@ -106,16 +169,16 @@ def search():
 
             formatted_results.append(doc)
 
-        # 计算分页信息
-        total_pages = math.ceil(total / size)
-
+        # 返回结果
         return jsonify({
             'results': formatted_results,
             'total': total,
             'page': page,
+            'total_pages': math.ceil(total / size),
             'size': size,
-            'total_pages': total_pages,
-            'query': query
+            'query': query,
+            'search_type': search_type,
+            'field_filter': field_filter
         })
 
     except Exception as e:
@@ -124,36 +187,40 @@ def search():
 
 @app.route('/question/<question_id>')
 def question_detail(question_id):
-    """显示问题详情"""
+    """题目详情页面"""
     try:
         result = es.get(index=INDEX_NAME, id=question_id)
-        source = result['_source']
-
-        question = {
-            'id': result['_id'],
-            '序号': source.get('序号', ''),
-            '题干': source.get('题干', ''),
-            '选项': {
-                'A': source.get('选项 A', ''),
-                'B': source.get('选项 B', ''),
-                'C': source.get('选项 C', ''),
-                'D': source.get('选项 D', ''),
-                'E': source.get('选项 E', ''),
-                'F': source.get('选项 F', ''),
-                'G': source.get('选项 G', ''),
-                'H': source.get('选项 H', '')
-            },
-            '解析': source.get('解析', ''),
-            '分数': source.get('分数', ''),
-            '答案': source.get('答案', ''),
-            '标签': source.get('标签', '')
-        }
-
+        question = result['_source']
+        question['id'] = question_id
         return render_template('detail.html', question=question)
-
     except Exception as e:
         return f"Error: {str(e)}", 404
 
 
+@app.route('/tags')
+def get_tags():
+    """获取所有标签"""
+    try:
+        # 使用聚合查询获取标签
+        search_body = {
+            "size": 0,
+            "aggs": {
+                "tags": {
+                    "terms": {
+                        "field": "标签.keyword",
+                        "size": 1000
+                    }
+                }
+            }
+        }
+
+        result = es.search(index=INDEX_NAME, body=search_body)
+        tags = [bucket['key'] for bucket in result['aggregations']['tags']['buckets']]
+        return jsonify({'tags': tags})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
+    # app.run(debug=True, host='0.0.0.0', port=5000)
     app.run(debug=True, host='0.0.0.0', port=5030)
