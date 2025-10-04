@@ -1,0 +1,121 @@
+<!-- templates/detail.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题目详情 - {{ question.序号 }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .question-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .question-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .question-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+        }
+        .options {
+            margin: 20px 0;
+        }
+        .option {
+            margin-bottom: 8px;
+        }
+        .answer {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-left: 4px solid #4caf50;
+            margin: 20px 0;
+        }
+        .analysis {
+            background-color: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 20px 0;
+        }
+        .tags {
+            margin-top: 20px;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #e0e0e0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="/">&laquo; 返回搜索</a>
+        </div>
+
+        <div class="question-header">
+            <div class="question-title">{{ question.序号 }}. {{ question.题干 }}</div>
+            <div class="question-meta">
+                <span>分数: {{ question.分数 or '无' }}</span>
+            </div>
+        </div>
+
+        <div class="options">
+            <h3>选项:</h3>
+            {% for option in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] %}
+                {% if question.选项[option] %}
+                    <div class="option">
+                        <strong>{{ option }}.</strong> {{ question.选项[option] }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="answer">
+            <h3>答案:</h3>
+            <p>{{ question.答案 }}</p>
+        </div>
+
+        <div class="analysis">
+            <h3>解析:</h3>
+            <p>{{ question.解析 or '无解析' }}</p>
+        </div>
+
+        <div class="tags">
+            <h3>标签:</h3>
+            {% if question.标签 %}
+                {% for tag in question.标签 %}
+                    <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            {% else %}
+                <p>无标签</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

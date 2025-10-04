@@ -1,0 +1,632 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题库查询系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .search-box button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-box button:hover {
+            background-color: #0056b3;
+        }
+        .search-filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .filter-group select {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .results-info {
+            margin-bottom: 20px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .question-item {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background-color: #fafafa;
+            transition: all 0.2s ease;
+        }
+        .question-item:hover {
+            background-color: #f0f8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .question-content {
+            margin-bottom: 10px;
+        }
+        .question-content h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination a {
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .pagination a:hover:not(.active) {
+            background-color: #f0f0f0;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .answer-section {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-left: 3px solid #007bff;
+            margin: 10px 0;
+        }
+        .show-answer-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .tag {
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        /* 搜索历史相关样式 */
+        .search-history {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .search-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .search-history-title {
+            margin: 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-item {
+            background-color: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .history-item:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .history-item .remove-history {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .history-item:hover .remove-history {
+            opacity: 1;
+        }
+
+        .clear-history {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+        }
+
+        .clear-history:hover {
+            color: #0056b3;
+        }
+
+        .remove-history {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-filters {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .results-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>题库查询系统</h1>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="请输入搜索关键词...">
+            <button onclick="search()">搜索</button>
+        </div>
+
+        <!-- 搜索历史区域 -->
+        <div id="searchHistory" class="search-history">
+            <div class="search-history-header">
+                <h4 class="search-history-title">最近搜索:</h4>
+                <button class="clear-history" onclick="clearSearchHistory()">清空历史</button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+        </div>
+
+        <div class="search-filters">
+            <div class="filter-group">
+                <label for="searchType">查询方式:</label>
+                <select id="searchType">
+                    <option value="fulltext">全文搜索</option>
+                    <option value="precise">精准查询</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="fieldFilter">搜索字段:</label>
+                <select id="fieldFilter">
+                    <option value="all">全部字段</option>
+                    <option value="题干">题干</option>
+                    <option value="选项 A">选项A</option>
+                    <option value="选项 B">选项B</option>
+                    <option value="选项 C">选项C</option>
+                    <option value="选项 D">选项D</option>
+                    <option value="选项 E">选项E</option>
+                    <option value="选项 F">选项F</option>
+                    <option value="选项 G">选项G</option>
+                    <option value="选项 H">选项H</option>
+                    <option value="答案">答案</option>
+                    <option value="解析">解析</option>
+                    <option value="标签">标签</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="pageSize">每页显示:</label>
+                <select id="pageSize">
+                    <option value="10">10条</option>
+                    <option value="20">20条</option>
+                    <option value="50">50条</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="resultsInfo" class="results-info">
+            <div id="searchStats"></div>
+            <div id="tagsContainer" class="tags-container"></div>
+        </div>
+
+        <div id="loading" class="loading">搜索中...</div>
+
+        <div id="results"></div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentQuery = '';
+        let currentSearchType = 'fulltext';
+        let currentFieldFilter = 'all';
+
+        // 页面加载完成后执行搜索
+        document.addEventListener('DOMContentLoaded', function() {
+            search();
+            loadTags();
+            displaySearchHistory(); // 显示搜索历史
+
+            // 监听回车键搜索
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    search();
+                }
+            });
+        });
+
+        // 搜索历史管理类
+        class SearchHistoryManager {
+            constructor(maxItems = 10) {
+                this.maxItems = maxItems;
+                this.storageKey = 'searchHistory';
+            }
+
+            // 获取搜索历史
+            getHistory() {
+                try {
+                    return JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            // 保存搜索历史
+            saveHistory(history) {
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(history));
+                    return true;
+                } catch (e) {
+                    console.error('保存搜索历史失败:', e);
+                    return false;
+                }
+            }
+
+            // 添加搜索记录
+            add(query) {
+                if (!query || typeof query !== 'string') return false;
+
+                const trimmedQuery = query.trim();
+                if (!trimmedQuery) return false;
+
+                let history = this.getHistory();
+
+                // 移除已存在的相同查询
+                history = history.filter(item => item !== trimmedQuery);
+
+                // 将新查询添加到开头
+                history.unshift(trimmedQuery);
+
+                // 保持最多指定数量的记录
+                if (history.length > this.maxItems) {
+                    history = history.slice(0, this.maxItems);
+                }
+
+                return this.saveHistory(history);
+            }
+
+            // 删除特定搜索记录
+            remove(query) {
+                if (!query) return false;
+
+                let history = this.getHistory();
+                history = history.filter(item => item !== query);
+                return this.saveHistory(history);
+            }
+
+            // 清空搜索历史
+            clear() {
+                try {
+                    localStorage.removeItem(this.storageKey);
+                    return true;
+                } catch (e) {
+                    console.error('清空搜索历史失败:', e);
+                    return false;
+                }
+            }
+        }
+
+        // 创建搜索历史管理实例
+        const historyManager = new SearchHistoryManager(10);
+
+        // 显示搜索历史
+        function displaySearchHistory() {
+            const history = historyManager.getHistory();
+            const historyContainer = document.getElementById('searchHistory');
+            const historyList = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                historyContainer.style.display = 'none';
+                return;
+            }
+
+            historyContainer.style.display = 'block';
+
+            // 清空现有的历史记录显示
+            historyList.innerHTML = '';
+
+            // 添加历史记录项
+            history.forEach(query => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span class="history-text">${query}</span>
+                    <span class="remove-history" onclick="removeHistoryItem('${query.replace(/'/g, "\\'")}')">×</span>
+                `;
+                item.querySelector('.history-text').onclick = () => {
+                    document.getElementById('searchInput').value = query;
+                    search();
+                };
+                historyList.appendChild(item);
+            });
+        }
+
+        // 删除单个历史记录
+        function removeHistoryItem(query) {
+            historyManager.remove(query);
+            displaySearchHistory();
+        }
+
+        // 清空搜索历史
+        function clearSearchHistory() {
+            if (confirm('确定要清空所有搜索历史吗？')) {
+                historyManager.clear();
+                displaySearchHistory();
+            }
+        }
+
+        function search(page = 1) {
+            const query = document.getElementById('searchInput').value;
+            const searchType = document.getElementById('searchType').value;
+            const fieldFilter = document.getElementById('fieldFilter').value;
+            const pageSize = document.getElementById('pageSize').value;
+
+            // 保存搜索记录
+            if (query.trim()) {
+                historyManager.add(query);
+                displaySearchHistory();
+            }
+
+            currentPage = page;
+
+            // 显示加载状态
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+
+            // 发送搜索请求
+            fetch(`/search?q=${encodeURIComponent(query)}&page=${page}&size=${pageSize}&type=${searchType}&field=${fieldFilter}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+
+                    if (data.error) {
+                        document.getElementById('results').innerHTML = `<p style="color: red;">错误: ${data.error}</p>`;
+                        return;
+                    }
+
+                    // 显示结果信息
+                    document.getElementById('searchStats').innerHTML =
+                        `找到 ${data.total} 条结果 (第 ${data.page}/${data.total_pages} 页)`;
+
+                    // 显示搜索结果
+                    displayResults(data.results);
+
+                    // 显示分页
+                    displayPagination(data.page, data.total_pages, query);
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('results').innerHTML = `<p style="color: red;">请求失败: ${error}</p>`;
+                });
+        }
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('results');
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<p>未找到相关结果</p>';
+                return;
+            }
+
+            let html = '';
+            results.forEach(item => {
+                html += `
+                <div class="question-item">
+                    <div class="question-content">
+                        <h3>${item.序号}. ${
+                            item.highlight && item.highlight.题干 ?
+                            item.highlight.题干.join('...') :
+                            item.题干
+                        }</h3>
+                        <div>
+                            <p><strong>A.</strong> ${
+                                item.highlight && item.highlight['选项 A'] ?
+                                item.highlight['选项 A'].join('...') :
+                                item.选项.A
+                            }</p>
+                            <p><strong>B.</strong> ${
+                                item.highlight && item.highlight['选项 B'] ?
+                                item.highlight['选项 B'].join('...') :
+                                item.选项.B
+                            }</p>
+                            <p><strong>C.</strong> ${
+                                item.highlight && item.highlight['选项 C'] ?
+                                item.highlight['选项 C'].join('...') :
+                                item.选项.C
+                            }</p>
+                            <p><strong>D.</strong> ${
+                                item.highlight && item.highlight['选项 D'] ?
+                                item.highlight['选项 D'].join('...') :
+                                item.选项.D
+                            }</p>
+                            ${item.选项.E ? `<p><strong>E.</strong> ${
+                                item.highlight && item.highlight['选项 E'] ?
+                                item.highlight['选项 E'].join('...') :
+                                item.选项.E
+                            }</p>` : ''}
+                            ${item.选项.F ? `<p><strong>F.</strong> ${
+                                item.highlight && item.highlight['选项 F'] ?
+                                item.highlight['选项 F'].join('...') :
+                                item.选项.F
+                            }</p>` : ''}
+                            ${item.选项.G ? `<p><strong>G.</strong> ${
+                                item.highlight && item.highlight['选项 G'] ?
+                                item.highlight['选项 G'].join('...') :
+                                item.选项.G
+                            }</p>` : ''}
+                            ${item.选项.H ? `<p><strong>H.</strong> ${
+                                item.highlight && item.highlight['选项 H'] ?
+                                item.highlight['选项 H'].join('...') :
+                                item.选项.H
+                            }</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="question-meta">
+                        <div>
+                            <span class="tag">${item.分数}</span>
+                            ${item.标签 ? `<span class="tag">${item.标签}</span>` : ''}
+                        </div>
+                        <div>
+                            <a href="/question/${item.id}" target="_blank">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+
+            resultsContainer.innerHTML = html;
+        }
+
+        function displayPagination(currentPage, totalPages, query) {
+            const paginationContainer = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // 上一页
+            if (currentPage > 1) {
+                html += `<a href="javascript:search(${currentPage - 1})">&laquo; 上一页</a>`;
+            }
+
+            // 页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `<a href="javascript:search(${i})" class="active">${i}</a>`;
+                } else {
+                    html += `<a href="javascript:search(${i})">${i}</a>`;
+                }
+            }
+
+            // 下一页
+            if (currentPage < totalPages) {
+                html += `<a href="javascript:search(${currentPage + 1})">下一页 &raquo;</a>`;
+            }
+
+            paginationContainer.innerHTML = html;
+        }
+
+        function loadTags() {
+            fetch('/tags')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.tags) {
+                        const tagsContainer = document.getElementById('tagsContainer');
+                        tagsContainer.innerHTML = data.tags.map(tag =>
+                            `<span class="tag">${tag}</span>`
+                        ).join('');
+                    }
+                })
+                .catch(error => console.error('加载标签失败:', error));
+        }
+    </script>
+</body>
+</html>

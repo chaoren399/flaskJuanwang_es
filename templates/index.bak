@@ -1,0 +1,257 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题库查询系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .search-box button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-box button:hover {
+            background-color: #0056b3;
+        }
+        .results-info {
+            margin-bottom: 20px;
+            color: #666;
+        }
+        .question-item {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .question-item:hover {
+            background-color: #f0f8ff;
+        }
+        .question-content {
+            margin-bottom: 10px;
+        }
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 14px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination a {
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .pagination a:hover:not(.active) {
+            background-color: #f0f0f0;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>题库查询系统</h1>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="请输入搜索关键词...">
+            <button onclick="search()">搜索</button>
+        </div>
+
+        <div id="resultsInfo" class="results-info"></div>
+
+        <div id="loading" class="loading">搜索中...</div>
+
+        <div id="results"></div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        // 页面加载完成后执行搜索
+        document.addEventListener('DOMContentLoaded', function() {
+            search();
+
+            // 监听回车键搜索
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    search();
+                }
+            });
+        });
+
+        function search(page = 1) {
+            const query = document.getElementById('searchInput').value;
+            currentPage = page;
+
+            // 显示加载状态
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+
+            // 发送搜索请求
+            fetch(`/search?q=${encodeURIComponent(query)}&page=${page}&size=${pageSize}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+
+                    if (data.error) {
+                        document.getElementById('results').innerHTML = `<p style="color: red;">错误: ${data.error}</p>`;
+                        return;
+                    }
+
+                    // 显示结果信息
+                    document.getElementById('resultsInfo').innerHTML =
+                        `找到 ${data.total} 条结果 (第 ${data.page}/${data.total_pages} 页)`;
+
+                    // 显示搜索结果
+                    displayResults(data.results);
+
+                    // 显示分页
+                    displayPagination(data.page, data.total_pages, query);
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('results').innerHTML = `<p style="color: red;">请求失败: ${error}</p>`;
+                });
+        }
+
+  // 替换 displayResults 函数中的相应行
+function displayResults(results) {
+    const resultsContainer = document.getElementById('results');
+
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<p>未找到相关结果</p>';
+        return;
+    }
+
+    let html = '';
+    results.forEach(item => {
+        // 处理标签显示
+        let tagsDisplay = '无';
+        if (item.标签) {
+            if (Array.isArray(item.标签)) {
+                tagsDisplay = item.标签.join(', ');
+            } else if (typeof item.标签 === 'string') {
+                tagsDisplay = item.标签;
+            }
+        }
+
+        html += `
+            <div class="question-item">
+                <div class="question-content">
+                    <h3><a href="/question/${item.id}" target="_blank">${item.序号}. ${item.题干}</a></h3>
+                    <div>
+                        <strong>选项:</strong><br>
+                        ${item.选项.A ? `A. ${item.选项.A}<br>` : ''}
+                        ${item.选项.B ? `B. ${item.选项.B}<br>` : ''}
+                        ${item.选项.C ? `C. ${item.选项.C}<br>` : ''}
+                        ${item.选项.D ? `D. ${item.选项.D}<br>` : ''}
+                        ${item.选项.E ? `E. ${item.选项.E}<br>` : ''}
+                        ${item.选项.F ? `F. ${item.选项.F}<br>` : ''}
+                        ${item.选项.G ? `G. ${item.选项.G}<br>` : ''}
+                        ${item.选项.H ? `H. ${item.选项.H}<br>` : ''}
+                    </div>
+                    <p><strong>答案:</strong> ${item.答案}</p>
+                    <p><strong>解析:</strong> ${item.解析 || '无'}</p>
+                </div>
+                <div class="question-meta">
+                    <span>分数: ${item.分数 || '无'}</span>
+                    <span>标签: ${tagsDisplay}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    resultsContainer.innerHTML = html;
+}
+
+
+        function displayPagination(currentPage, totalPages, query) {
+            const paginationContainer = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // 上一页
+            if (currentPage > 1) {
+                html += `<a href="#" onclick="search(${currentPage - 1}); return false;">&laquo; 上一页</a>`;
+            }
+
+            // 页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `<a href="#" class="active">${i}</a>`;
+                } else {
+                    html += `<a href="#" onclick="search(${i}); return false;">${i}</a>`;
+                }
+            }
+
+            // 下一页
+            if (currentPage < totalPages) {
+                html += `<a href="#" onclick="search(${currentPage + 1}); return false;">下一页 &raquo;</a>`;
+            }
+
+            paginationContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
