@@ -2,6 +2,14 @@
 
 es.a.baimeidashu.com
 
+1-新题材步骤
+
+先把xlxs 文件复制到data/目录下
+然后执行 tool_xlsx_to_csv.py 转换为csv 文件（存储到 data/csv目录下）
+
+然后执行tool_csv_to_es.py 把csv 文件导入 es 中就可以。
+也去搜索验证一下。
+
 
 openpyxl
 
@@ -17,6 +25,7 @@ es = Elasticsearch(
 
 es:"8.14.1
 
+用户名:elastic 密码:123456
 
 
 且索引设置为 stockinfo
