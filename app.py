@@ -53,14 +53,14 @@ def search():
                         "bool": {
                             "should": [
                                 {"term": {"题干.keyword": query}},
-                                {"term": {"选项 A.keyword": query}},
-                                {"term": {"选项 B.keyword": query}},
-                                {"term": {"选项 C.keyword": query}},
-                                {"term": {"选项 D.keyword": query}},
-                                {"term": {"选项 E.keyword": query}},
-                                {"term": {"选项 F.keyword": query}},
-                                {"term": {"选项 G.keyword": query}},
-                                {"term": {"选项 H.keyword": query}},
+                                {"term": {"选项A.keyword": query}},
+                                {"term": {"选项B.keyword": query}},
+                                {"term": {"选项C.keyword": query}},
+                                {"term": {"选项D.keyword": query}},
+                                {"term": {"选项E.keyword": query}},
+                                {"term": {"选项F.keyword": query}},
+                                {"term": {"选项G.keyword": query}},
+                                {"term": {"选项H.keyword": query}},
                                 {"term": {"答案.keyword": query}},
                                 {"term": {"标签.keyword": query}},
                                 {"term": {"解析.keyword": query}}
@@ -96,8 +96,8 @@ def search():
                     "query": {
                         "multi_match": {
                             "query": query,
-                            "fields": ["题干", "选项 A", "选项 B", "选项 C", "选项 D",
-                                       "选项 E", "选项 F", "选项 G", "选项 H", "解析"],
+                            "fields": ["题干", "选项A", "选项B", "选项C", "选项D",
+                                       "选项E", "选项F", "选项G", "选项H", "解析"],
                             "operator": "and"
                         }
                     },
@@ -106,14 +106,14 @@ def search():
                         "post_tags": ["</span>"],
                         "fields": {
                             "题干": {},
-                            "选项 A": {},
-                            "选项 B": {},
-                            "选项 C": {},
-                            "选项 D": {},
-                            "选项 E": {},
-                            "选项 F": {},
-                            "选项 G": {},
-                            "选项 H": {},
+                            "选项A": {},
+                            "选项B": {},
+                            "选项C": {},
+                            "选项D": {},
+                            "选项E": {},
+                            "选项F": {},
+                            "选项G": {},
+                            "选项H": {},
                             "解析": {}
                         }
                     }
@@ -137,30 +137,35 @@ def search():
 
         # 处理搜索结果
         hits = result['hits']['hits']
-        total = result['hits']['total']['value']
 
+        total = result['hits']['total']['value']
+        print("---hist---")
+        print(hits)
         # 格式化结果
         formatted_results = []
         for hit in hits:
             source = hit['_source']
+            print("---source--A-"+source.get('选项A', ''))
+            # print("---sourcec-C--"+source.get('选项C', ''))
+            # print("---source--D-"+source.get('选项D', ''))
             doc = {
                 'id': hit['_id'],
-                '序号': source.get('序号', ''),
-                '题干': source.get('题干', ''),
+                '序号': source.get('序号', '') or '',
+                '题干': source.get('题干', '') or '',
                 '选项': {
-                    'A': source.get('选项 A', ''),
-                    'B': source.get('选项 B', ''),
-                    'C': source.get('选项 C', ''),
-                    'D': source.get('选项 D', ''),
-                    'E': source.get('选项 E', ''),
-                    'F': source.get('选项 F', ''),
-                    'G': source.get('选项 G', ''),
-                    'H': source.get('选项 H', '')
+                    'A': source.get('选项A', '') or '',
+                    'B': source.get('选项B', '') or '',
+                    'C': source.get('选项C', '') or '',
+                    'D': source.get('选项D', '') or '',
+                    'E': source.get('选项E', '') or '',
+                    'F': source.get('选项F', '') or '',
+                    'G': source.get('选项G', '') or '',
+                    'H': source.get('选项H', '') or ''
                 },
-                '解析': source.get('解析', ''),
-                '分数': source.get('分数', ''),
-                '答案': source.get('答案', ''),
-                '标签': source.get('标签', '')
+                '解析': source.get('解析', '') or '',
+                '分数': source.get('分数', '') or '',
+                '答案': source.get('答案', '') or '',
+                '标签': source.get('标签', '') or ''
             }
 
             # 添加高亮内容（如果有）
@@ -169,6 +174,7 @@ def search():
 
             formatted_results.append(doc)
 
+        print('Results-----:', formatted_results)
         # 返回结果
         return jsonify({
             'results': formatted_results,

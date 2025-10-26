@@ -1,0 +1,47 @@
+
+
+  GET /stockinfo/_search?q=题干:"法狮龙"
+
+
+{
+  "took": 56,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1,
+      "relation": "eq"
+    },
+    "max_score": 22.13268,
+    "hits": [
+      {
+        "_index": "stockinfo",
+        "_id": "cb3c3a4eb08ba440a2ea3d9f090d1d7d",
+        "_score": 22.13268,
+        "_source": {
+          "序号": 38,
+          "题干": "法狮龙",
+          "选项 A": "吊顶",
+          "选项 B": "浙江-嘉兴",
+          "选项 C": "吊顶营收A股第二，5亿",
+          "选项  D": "2025年10月23日公告设立子公司探索AI业务",
+          "选项 E": null,
+          "选项 F": null,
+          "选项 G": null,
+          "选项 H": null,
+          "解析": null,
+          "分数": null,
+          "答案": "ABCDEFGH",
+          "标签": "x35-建材",
+          "file_hash": "00e77e6315",
+          "unique_id": "cb3c3a4eb08ba440a2ea3d9f090d1d7d"
+        }
+      }
+    ]
+  }
+}

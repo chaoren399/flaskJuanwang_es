@@ -1,0 +1,12 @@
+搜索 奥普科技的时候出现
+错误: can only concatenate str (not "NoneType") to str
+
+但是es 信息里存在奥普科技，如下：
+
+[{'_index': 'stockinfo', '_id': 'd74d246216b41270d6fff140b255d0aa', '_score': 14.877674, '_source': {'序号': None, '题干': '关系最紧密的3家', '选项A': '新莱应材，至纯科技，奥普光电', '选项B': None, '选项C': None, '选项D': None, '选项E': None, '选项F': None, '选项G': None, '选项H': None, '解析': None, '分数': None, '答案': None, '标签': None, 'file_hash': '778830937b', 'unique_id': 'd74d246216b41270d6fff140b255d0aa'}, 'highlight': {'选项A': ["新莱应材，至纯<span class='highlight'>科</span><span class='highlight'>技</span>，<span class='highlight'>奥</span><span class='highlight'>普</span>光电"]}}, {'_index': 'stockinfo', '_id': 'b6eabceb7f5a367575bf627135ea3bc6', '_score': 14.321653, '_source': {'序号': 39, '题干': '奥普科技', '选项A': '吊顶', '选项B': '浙江-杭州', '选项C': '吊顶营收A股第三，4亿', '选项D': None, '选项E': None, '选项F': None, '选项G': None, '选项H': None, '解析': None, '分数': None, '答案': 'ABCDEFGH', '标签': 'x35-建材', 'file_hash': '00e77e6315', 'unique_id': 'b6eabceb7f5a367575bf627135ea3bc6'}, 'highlight': {'题干': ["<span class='highlight'>奥</span><span class='highlight'>普</span><span class='highlight'>科</span><span class='highlight'>技</span>"]}}]
+
+
+
+搜索奥普科技页面不显示选项E
+但是es 信息里存在奥普科技，如下：
+Results-----: [{'id': 'd74d246216b41270d6fff140b255d0aa', '序号': '', '题干': '关系最紧密的3家', '选项': {'A': '新莱应材，至纯科技，奥普光电', 'B': '', 'C': '', 'D': '', 'E': '', 'F': '', 'G': '', 'H': ''}, '解析': '', '分数': '', '答案': '', '标签': '', 'highlight': {'选项A': ["新莱应材，至纯<span class='highlight'>科</span><span class='highlight'>技</span>，<span class='highlight'>奥</span><span class='highlight'>普</span>光电"]}}, {'id': '7cba3a10bb58d59b02bb3488fd809b83', '序号': 39, '题干': '奥普科技', '选项': {'A': '吊顶', 'B': '浙江-杭州', 'C': '吊顶营收A股第三，4亿', 'D': '测试D', 'E': '测试E', 'F': '', 'G': '', 'H': ''}, '解析': '', '分数': '', '答案': 'ABCDEFGH', '标签': 'x35-建材', 'highlight': {'题干': ["<span class='highlight'>奥</span><span class='highlight'>普</span><span class='highlight'>科</span><span class='highlight'>技</span>"]}}]

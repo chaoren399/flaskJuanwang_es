@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>题目详情 - {{ question.序号 }}</title>
+    <title>题目详情</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
             background-color: #f5f5f5;
         }
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background-color: white;
             padding: 30px;
@@ -21,42 +21,55 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .back-link {
+            display: inline-block;
             margin-bottom: 20px;
-        }
-        .back-link a {
             color: #007bff;
             text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
         }
         .question-header {
             border-bottom: 1px solid #eee;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        .question-title {
-            font-size: 20px;
-            margin-bottom: 10px;
+        .question-header h1 {
+            margin: 0 0 10px 0;
+            color: #333;
         }
         .question-meta {
             display: flex;
             gap: 20px;
             color: #666;
         }
+        .question-content {
+            margin-bottom: 30px;
+        }
+        .question-content h2 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
         .options {
-            margin: 20px 0;
+            margin: 15px 0;
         }
         .option {
-            margin-bottom: 8px;
+            margin: 8px 0;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
         }
-        .answer {
+        .answer-section {
             background-color: #e8f5e9;
             padding: 15px;
-            border-left: 4px solid #4caf50;
+            border-radius: 4px;
             margin: 20px 0;
         }
-        .analysis {
+        .analysis-section {
             background-color: #fff3e0;
             padding: 15px;
-            border-left: 4px solid #ff9800;
+            border-radius: 4px;
             margin: 20px 0;
         }
         .tags {
@@ -64,97 +77,79 @@
         }
         .tag {
             display: inline-block;
-            background-color: #e0e0e0;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin-right: 5px;
-            font-size: 12px;
-        }
-        .show-answer-btn {
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .show-answer-btn:hover {
-            background-color: #218838;
-        }
-        .hidden-content {
-            display: none;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="back-link">
-            <a href="/">&laquo; 返回搜索</a>
-        </div>
+        <a href="/" class="back-link">&larr; 返回搜索</a>
 
         <div class="question-header">
-            <div class="question-title">{{ question.序号 }}. {{ question.题干 }}</div>
+            <h1>题目 #{{ question.序号 or '' }}</h1>
+            <div class="question-meta">
+                <div>分数: {{ question.分数 or '未指定' }}</div>
+            </div>
         </div>
 
-        <div class="options">
-            <h3>选项:</h3>
-            {% for option in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] %}
-                {% if question['选项 ' + option] %}
-                    <div class="option">
-                        <strong>{{ option }}.</strong> {{ question['选项 ' + option] }}
-                    </div>
+        <div class="question-content">
+            <h2>题干</h2>
+            <p>{{ question.题干 or '' }}</p>
+
+            <h2>选项</h2>
+            <div class="options">
+                {% if question.选项A %}
+                <div class="option">A. {{ question.选项A }}</div>
                 {% endif %}
+                {% if question.选项B %}
+                <div class="option">B. {{ question.选项B }}</div>
+                {% endif %}
+                {% if question.选项C %}
+                <div class="option">C. {{ question.选项C }}</div>
+                {% endif %}
+                {% if question.选项D %}
+                <div class="option">D. {{ question.选项D }}</div>
+                {% endif %}
+                {% if question.选项E %}
+                <div class="option">E. {{ question.选项E }}</div>
+                {% endif %}
+                {% if question.选项F %}
+                <div class="option">F. {{ question.选项F }}</div>
+                {% endif %}
+                {% if question.选项G %}
+                <div class="option">G. {{ question.选项G }}</div>
+                {% endif %}
+                {% if question.选项H %}
+                <div class="option">H. {{ question.选项H }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="answer-section">
+            <h2>答案</h2>
+            <p>{{ question.答案 or '' }}</p>
+        </div>
+
+        <div class="analysis-section">
+            <h2>解析</h2>
+            <p>{{ question.解析 or '暂无解析' }}</p>
+        </div>
+
+        {% if question.标签 %}
+        <div class="tags">
+            <h2>标签</h2>
+            {% for tag in question.标签 if question.标签 is iterable %}
+                <span class="tag">{{ tag }}</span>
+            {% else %}
+                <span class="tag">{{ question.标签 }}</span>
             {% endfor %}
         </div>
-
-        <div class="answer">
-            <h3>答案:</h3>
-            <button class="show-answer-btn" onclick="toggleAnswer()">显示答案和解析</button>
-            <div id="answerContent" class="hidden-content">
-                <p>{{ question.答案 }}</p>
-            </div>
-        </div>
-
-        <div class="analysis">
-            <h3>解析:</h3>
-            <div id="analysisContent" class="hidden-content">
-                <p>{{ question.解析 or '无' }}</p>
-            </div>
-        </div>
-
-        <div class="tags">
-            <h3>标签:</h3>
-            {% if question.标签 %}
-                {% if question.标签 is string %}
-                    <span class="tag">{{ question.标签 }}</span>
-                {% else %}
-                    {% for tag in question.标签 %}
-                        <span class="tag">{{ tag }}</span>
-                    {% endfor %}
-                {% endif %}
-            {% else %}
-                <span>无</span>
-            {% endif %}
-        </div>
+        {% endif %}
     </div>
-
-    <script>
-        function toggleAnswer() {
-            const answerContent = document.getElementById('answerContent');
-            const analysisContent = document.getElementById('analysisContent');
-            const button = event.target;
-
-            if (answerContent.classList.contains('hidden-content')) {
-                answerContent.classList.remove('hidden-content');
-                analysisContent.classList.remove('hidden-content');
-                button.textContent = '隐藏答案和解析';
-            } else {
-                answerContent.classList.add('hidden-content');
-                analysisContent.classList.add('hidden-content');
-                button.textContent = '显示答案和解析';
-            }
-        }
-    </script>
 </body>
 </html>

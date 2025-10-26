@@ -23,6 +23,19 @@ class CSVToElasticsearchImporter:
         self.index_name = "stockinfo"
         self.csv_directory = r"D:\03-code\pycharm\stock\flaskJuanwang_es\data\csv"
 
+    def delete_index_if_exists(self):
+        """删除现有的索引（如果存在）"""
+        if self.es.indices.exists(index=self.index_name):
+            try:
+                self.es.indices.delete(index=self.index_name)
+                logger.info(f"已删除旧索引: {self.index_name}")
+            except Exception as e:
+                logger.error(f"删除索引失败: {e}")
+                return False
+        else:
+            logger.info(f"索引 {self.index_name} 不存在，无需删除")
+        return True
+
     def create_index_if_not_exists(self):
         """创建索引（如果不存在）"""
         if not self.es.indices.exists(index=self.index_name):
@@ -148,7 +161,12 @@ class CSVToElasticsearchImporter:
 
     def import_all_csv(self):
         """导入所有CSV文件到Elasticsearch"""
-        # 创建索引
+        # 删除旧索引
+        if not self.delete_index_if_exists():
+            logger.error("无法删除旧索引，程序退出")
+            return False
+
+        # 创建新索引
         if not self.create_index_if_not_exists():
             logger.error("无法创建索引，程序退出")
             return False
@@ -189,6 +207,52 @@ class CSVToElasticsearchImporter:
 
         logger.info(f"导入完成 - 总共成功导入 {total_imported} 条记录，失败 {total_failed} 条记录")
         return True
+
+    # def import_all_csv(self):
+    #     """导入所有CSV文件到Elasticsearch"""
+    #     # 创建索引
+    #     if not self.create_index_if_not_exists():
+    #         logger.error("无法创建索引，程序退出")
+    #         return False
+    #
+    #     # 获取所有CSV文件
+    #     csv_files = self.read_csv_files()
+    #
+    #     if not csv_files:
+    #         logger.warning("没有找到CSV文件")
+    #         return False
+    #
+    #     total_imported = 0
+    #     total_failed = 0
+    #
+    #     # 处理每个CSV文件
+    #     for file_path in csv_files:
+    #         logger.info(f"正在处理文件: {os.path.basename(file_path)}")
+    #
+    #         # 转换为bulk操作格式
+    #         actions = self.process_csv_to_bulk(file_path)
+    #
+    #         if not actions:
+    #             logger.warning(f"文件 {os.path.basename(file_path)} 没有新数据需要导入")
+    #             continue
+    #
+    #         try:
+    #             # 批量导入数据
+    #             success, failed = bulk(self.es, actions, chunk_size=1000, request_timeout=60)
+    #             total_imported += success
+    #             total_failed += len(failed) if failed else 0
+    #             logger.info(f"文件 {os.path.basename(file_path)} 导入完成: 成功{success}条记录")
+    #
+    #             if failed:
+    #                 logger.warning(f"文件 {os.path.basename(file_path)} 导入失败: {len(failed)} 条记录")
+    #
+    #         except Exception as e:
+    #             logger.error(f"导入文件 {os.path.basename(file_path)} 时出错: {e}")
+    #
+    #     logger.info(f"导入完成 - 总共成功导入 {total_imported} 条记录，失败 {total_failed} 条记录")
+    #     return True
+
+
 
 
 def main():

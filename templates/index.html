@@ -194,8 +194,6 @@
 </head>
 <body>
     <div class="container">
-
-
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="请输入搜索关键词...">
             <button onclick="search()">搜索</button>
@@ -404,67 +402,80 @@
                 });
         }
 
-        function displayResults(results) {
-            const resultsContainer = document.getElementById('results');
+    function displayResults(results) {
+    const resultsContainer = document.getElementById('results');
 
-            if (results.length === 0) {
-                resultsContainer.innerHTML = '<div class="no-results"><p>未找到相关结果</p></div>';
-                return;
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<div class="no-results"><p>未找到相关结果</p></div>';
+        return;
+    }
+
+    let html = '';
+    results.forEach((item, index) => {
+        // 处理标签显示
+        let tagsHtml = '';
+        if (item.标签) {
+            const tags = Array.isArray(item.标签) ? item.标签 : [item.标签];
+            tagsHtml = tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+        }
+
+        // 处理高亮显示
+        let questionTitle = item.题干 || '';
+        let options = {
+            A: item.选项.A || '',
+            B: item.选项.B || '',
+            C: item.选项.C || '',
+            D: item.选项.D || '',
+            E: item.选项.E || '',
+            F: item.选项.F || '',
+            G: item.选项.G || '',
+            H: item.选项.H || ''
+        };
+
+        // 如果有高亮内容，则使用高亮版本
+        if (item.highlight) {
+            if (item.highlight.题干) {
+                questionTitle = item.highlight.题干[0];
             }
 
-            let html = '';
-            results.forEach((item, index) => {
-                // 处理标签显示
-                let tagsHtml = '';
-                if (item.标签) {
-                    const tags = Array.isArray(item.标签) ? item.标签 : [item.标签];
-                    tagsHtml = tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+            // 处理选项高亮（注意字段名与后端一致）
+            for (let opt in options) {
+                const highlightKey = `选项${opt}`;
+                if (item.highlight[highlightKey]) {
+                    options[opt] = item.highlight[highlightKey][0];
                 }
-
-                // 处理高亮显示
-                let questionTitle = item.题干;
-                let options = {
-                    A: item.选项.A || '',
-                    B: item.选项.B || '',
-                    C: item.选项.C || ''
-                };
-
-                // 如果有高亮内容，则使用高亮版本
-                if (item.highlight) {
-                    if (item.highlight.题干) {
-                        questionTitle = item.highlight.题干[0];
-                    }
-
-                    // 处理选项高亮
-                    for (let opt in options) {
-                        const highlightKey = `选项 ${opt}`;
-                        if (item.highlight[highlightKey]) {
-                            options[opt] = item.highlight[highlightKey][0];
-                        }
-                    }
-                }
-
-                html += `
-                <div class="question-item">
-                    <div class="question-content">
-                        <h3>${item.序号}. ${questionTitle}</h3>
-                        <div>
-                            <strong>选项:</strong><br>
-                            ${options.A ? `A. ${options.A}<br>` : ''}
-                            ${options.B ? `B. ${options.B}<br>` : ''}
-                            ${options.C ? `C. ${options.C}<br>` : ''}
-                        </div>
-                    </div>
-                    <div class="question-meta">
-                        <div>
-                            ${tagsHtml ? `<div>${tagsHtml}</div>` : ''}
-                        </div>
-                    </div>
-                </div>`;
-            });
-
-            resultsContainer.innerHTML = html;
+            }
         }
+
+        // 构建选项HTML，只显示非空选项
+        let optionsHtml = '';
+        for (let opt in options) {
+            if (options[opt]) {
+                optionsHtml += `${opt}. ${options[opt]}<br>`;
+            }
+        }
+
+        html += `
+        <div class="question-item">
+            <div class="question-content">
+                <h3>${item.序号 || ''}. ${questionTitle}</h3>
+                <div>
+                    <strong>选项:</strong><br>
+                    ${optionsHtml}
+                </div>
+            </div>
+            <div class="question-meta">
+                <div>
+                    ${tagsHtml ? `<div>${tagsHtml}</div>` : ''}
+                </div>
+            </div>
+        </div>`;
+    });
+
+    resultsContainer.innerHTML = html;
+}
+
+
 
         function displayPagination(currentPage, totalPages) {
             const paginationContainer = document.getElementById('pagination');

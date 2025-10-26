@@ -35,8 +35,8 @@ def convert_xlsx_to_csv(source_dir, target_dir):
 
 # 使用示例
 
-# source_directory = r"D:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分"
-source_directory = r"D:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分\1-0-100"
+source_directory = r"D:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分"
+# source_directory = r"D:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分\1-0-100"
 # source_directory = r"D:\03-code\pycharm\stock\flaskJuanwang_es\data\6-卷王-题材细分"
 # source_directory = r"D:\03-code\pycharm\stock\flaskJuanwang_es\data\6-卷王-题材细分\1-0-100"
 # target_directory = r"./data/csv"

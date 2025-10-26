@@ -1,0 +1,541 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题库查询系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .search-box button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-box button:hover {
+            background-color: #0056b3;
+        }
+        .results-info {
+            margin-bottom: 20px;
+            color: #666;
+        }
+        .question-item {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background-color: #fafafa;
+            transition: all 0.2s ease;
+        }
+        .question-item:hover {
+            background-color: #f0f8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .question-content {
+            margin-bottom: 10px;
+        }
+        .question-content h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 14px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination a {
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .pagination a:hover:not(.active) {
+            background-color: #f0f0f0;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        /* 搜索历史样式 */
+        .search-history {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .search-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .search-history-title {
+            margin: 0;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .clear-history {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        .clear-history:hover {
+            color: #0056b3;
+        }
+
+        .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            background-color: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 0;
+            border: none;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .history-item:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .history-text {
+            margin-right: 8px;
+        }
+
+        .remove-history {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        .history-item:hover .remove-history {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+            }
+
+            .results-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="请输入搜索关键词...">
+            <button onclick="search()">搜索</button>
+        </div>
+
+        <!-- 搜索历史区域 -->
+        <div id="searchHistory" class="search-history">
+            <div class="search-history-header">
+                <h4 class="search-history-title">最近搜索:</h4>
+                <button class="clear-history" onclick="clearSearchHistory()">清空历史</button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+        </div>
+
+        <div id="resultsInfo" class="results-info">
+            <div id="searchStats"></div>
+            <div id="tagsContainer" class="tags-container"></div>
+        </div>
+
+        <div id="loading" class="loading">搜索中...</div>
+
+        <div id="results"></div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentQuery = ''; // 保存当前查询关键词
+
+        // 搜索历史管理类
+        class SearchHistoryManager {
+            constructor(maxItems = 10) {
+                this.maxItems = maxItems;
+                this.storageKey = 'searchHistory';
+            }
+
+            // 获取搜索历史
+            getHistory() {
+                try {
+                    return JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            // 保存搜索历史
+            saveHistory(history) {
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(history));
+                    return true;
+                } catch (e) {
+                    console.error('保存搜索历史失败:', e);
+                    return false;
+                }
+            }
+
+            // 添加搜索记录
+            add(query) {
+                if (!query || typeof query !== 'string') return false;
+
+                const trimmedQuery = query.trim();
+                if (!trimmedQuery) return false;
+
+                let history = this.getHistory();
+
+                // 移除已存在的相同查询
+                history = history.filter(item => item !== trimmedQuery);
+
+                // 将新查询添加到开头
+                history.unshift(trimmedQuery);
+
+                // 保持最多指定数量的记录
+                if (history.length > this.maxItems) {
+                    history = history.slice(0, this.maxItems);
+                }
+
+                return this.saveHistory(history);
+            }
+
+            // 删除特定搜索记录
+            remove(query) {
+                if (!query) return false;
+
+                let history = this.getHistory();
+                history = history.filter(item => item !== query);
+                return this.saveHistory(history);
+            }
+
+            // 清空搜索历史
+            clear() {
+                try {
+                    localStorage.removeItem(this.storageKey);
+                    return true;
+                } catch (e) {
+                    console.error('清空搜索历史失败:', e);
+                    return false;
+                }
+            }
+        }
+
+        // 创建搜索历史管理实例
+        const historyManager = new SearchHistoryManager(10);
+
+        // 页面加载完成后执行搜索
+        document.addEventListener('DOMContentLoaded', function() {
+            search();
+            displaySearchHistory(); // 显示搜索历史
+
+            // 监听回车键搜索
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    search();
+                }
+            });
+        });
+
+        // 显示搜索历史
+        function displaySearchHistory() {
+            const history = historyManager.getHistory();
+            const historyContainer = document.getElementById('searchHistory');
+            const historyList = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                historyContainer.style.display = 'none';
+                return;
+            }
+
+            historyContainer.style.display = 'block';
+
+            // 清空现有的历史记录显示
+            historyList.innerHTML = '';
+
+            // 添加历史记录项
+            history.forEach(query => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span class="history-text">${query}</span>
+                    <span class="remove-history" onclick="removeHistoryItem('${query.replace(/'/g, "\\'")}')">×</span>
+                `;
+                item.querySelector('.history-text').onclick = () => {
+                    document.getElementById('searchInput').value = query;
+                    search();
+                };
+                historyList.appendChild(item);
+            });
+        }
+
+        // 删除单个历史记录
+        function removeHistoryItem(query) {
+            historyManager.remove(query);
+            displaySearchHistory();
+        }
+
+        // 清空搜索历史
+        function clearSearchHistory() {
+            if (confirm('确定要清空所有搜索历史吗？')) {
+                historyManager.clear();
+                displaySearchHistory();
+            }
+        }
+
+        function search(page = 1) {
+            const query = document.getElementById('searchInput').value;
+
+            // 保存搜索记录
+            if (query.trim()) {
+                historyManager.add(query);
+                displaySearchHistory();
+            }
+
+            // 保存当前查询和页码
+            currentQuery = query;
+            currentPage = page;
+
+            // 显示加载状态
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+
+            // 发送搜索请求
+            fetch(`/search?q=${encodeURIComponent(query)}&page=${page}&size=10`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+
+                    if (data.error) {
+                        document.getElementById('results').innerHTML = `<div class="no-results"><p style="color: red;">错误: ${data.error}</p></div>`;
+                        return;
+                    }
+
+                    // 显示结果信息
+                    document.getElementById('searchStats').innerHTML =
+                        `找到 ${data.total} 条结果 (第 ${data.page}/${data.total_pages} 页)`;
+
+                    // 显示搜索结果
+                    displayResults(data.results);
+
+                    // 显示分页
+                    displayPagination(data.page, data.total_pages);
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('results').innerHTML = `<div class="no-results"><p style="color: red;">请求失败: ${error}</p></div>`;
+                });
+        }
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('results');
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results"><p>未找到相关结果</p></div>';
+                return;
+            }
+
+            let html = '';
+            results.forEach((item, index) => {
+                // 处理标签显示
+                let tagsHtml = '';
+                if (item.标签) {
+                    const tags = Array.isArray(item.标签) ? item.标签 : [item.标签];
+                    tagsHtml = tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+                }
+
+                // 处理高亮显示
+                let questionTitle = item.题干;
+                let options = {
+                    A: item.选项.A || '',
+                    B: item.选项.B || '',
+                    C: item.选项.C || '',
+                    D: item.选项.D || ''
+
+                };
+
+                // 如果有高亮内容，则使用高亮版本
+                if (item.highlight) {
+                    if (item.highlight.题干) {
+                        questionTitle = item.highlight.题干[0];
+                    }
+
+                    // 处理选项高亮
+                    for (let opt in options) {
+                        const highlightKey = `选项 ${opt}`;
+                        if (item.highlight[highlightKey]) {
+                            options[opt] = item.highlight[highlightKey][0];
+                        }
+                    }
+                }
+
+                html += `
+                <div class="question-item">
+                    <div class="question-content">
+                        <h3>${item.序号}. ${questionTitle}</h3>
+                        <div>
+                            <strong>选项:</strong><br>
+                            ${options.A ? `A. ${options.A}<br>` : ''}
+                            ${options.B ? `B. ${options.B}<br>` : ''}
+                            ${options.C ? `C. ${options.C}<br>` : ''}
+                            ${options.D ? `D. ${options.D}<br>` : ''}
+
+                        </div>
+                    </div>
+                    <div class="question-meta">
+                        <div>
+                            ${tagsHtml ? `<div>${tagsHtml}</div>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            resultsContainer.innerHTML = html;
+        }
+
+        function displayPagination(currentPage, totalPages) {
+            const paginationContainer = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = '';
+
+            // 上一页按钮
+            if (currentPage > 1) {
+                paginationHtml += `<a href="#" onclick="searchWithPage(${currentPage - 1}); return false;">&laquo;</a>`;
+            }
+
+            // 页码按钮
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    paginationHtml += `<a href="#" class="active" onclick="searchWithPage(${i}); return false;">${i}</a>`;
+                } else {
+                    paginationHtml += `<a href="#" onclick="searchWithPage(${i}); return false;">${i}</a>`;
+                }
+            }
+
+            // 下一页按钮
+            if (currentPage < totalPages) {
+                paginationHtml += `<a href="#" onclick="searchWithPage(${currentPage + 1}); return false;">&raquo;</a>`;
+            }
+
+            paginationContainer.innerHTML = paginationHtml;
+        }
+
+        // 用于分页的搜索函数，使用当前查询关键词
+        function searchWithPage(page) {
+            // 使用保存的当前查询关键词
+            fetch(`/search?q=${encodeURIComponent(currentQuery)}&page=${page}&size=10`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+
+                    if (data.error) {
+                        document.getElementById('results').innerHTML = `<div class="no-results"><p style="color: red;">错误: ${data.error}</p></div>`;
+                        return;
+                    }
+
+                    // 更新当前页码
+                    currentPage = page;
+
+                    // 显示结果信息
+                    document.getElementById('searchStats').innerHTML =
+                        `找到 ${data.total} 条结果 (第 ${data.page}/${data.total_pages} 页)`;
+
+                    // 显示搜索结果
+                    displayResults(data.results);
+
+                    // 显示分页
+                    displayPagination(data.page, data.total_pages);
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('results').innerHTML = `<div class="no-results"><p style="color: red;">请求失败: ${error}</p></div>`;
+                });
+        }
+    </script>
+</body>
+</html>
