@@ -55,7 +55,8 @@ class CSVToElasticsearchImporter:
                         "解析": {"type": "text"},
                         "分数": {"type": "keyword"},
                         "答案": {"type": "text"},
-                        "标签": {"type": "keyword"},
+                        # "标签": {"type": "keyword"},
+                        "标签": {"type": "text"},
                         "file_hash": {"type": "keyword"},  # 添加文件hash字段
                         "unique_id": {"type": "keyword"}  # 添加唯一ID字段
                     }

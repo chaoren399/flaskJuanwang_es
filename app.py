@@ -62,7 +62,8 @@ def search():
                                 {"term": {"选项G.keyword": query}},
                                 {"term": {"选项H.keyword": query}},
                                 {"term": {"答案.keyword": query}},
-                                {"term": {"标签.keyword": query}},
+                                # {"term": {"标签.keyword": query}},
+                                {"wildcard": {"标签.keyword": f"*{query}*"}},  # 修改为wildcard查询支持模糊匹配
                                 {"term": {"解析.keyword": query}}
                             ],
                             "minimum_should_match": 1
@@ -97,7 +98,7 @@ def search():
                         "multi_match": {
                             "query": query,
                             "fields": ["题干", "选项A", "选项B", "选项C", "选项D",
-                                       "选项E", "选项F", "选项G", "选项H", "解析"],
+                                       "选项E", "选项F", "选项G", "选项H", "解析", "标签"],
                             "operator": "and"
                         }
                     },
@@ -114,7 +115,9 @@ def search():
                             "选项F": {},
                             "选项G": {},
                             "选项H": {},
-                            "解析": {}
+                            "解析": {},
+                            "标签": {}  #新加2025年10月27日 可以搜索到标签
+
                         }
                     }
                 }
