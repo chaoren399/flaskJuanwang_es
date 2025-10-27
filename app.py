@@ -145,9 +145,7 @@ def search():
         formatted_results = []
         for hit in hits:
             source = hit['_source']
-            print("---source--A-"+source.get('选项A', ''))
-            # print("---sourcec-C--"+source.get('选项C', ''))
-            # print("---source--D-"+source.get('选项D', ''))
+
             doc = {
                 'id': hit['_id'],
                 '序号': source.get('序号', '') or '',

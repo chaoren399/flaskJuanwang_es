@@ -39,7 +39,10 @@ def convert_xlsx_to_csv(source_dir, target_dir):
 # 使用示例
 
 source_directory = r"D:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分\1-0-100"
+source_directory2 = r"D:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分"
 target_directory = r"D:\03-code\pycharm\stock\flaskJuanwang_es\data\csv"
 
-# 执行转换
+
+# 执行转换 - 分别处理两个目录
 convert_xlsx_to_csv(source_directory, target_directory)
+convert_xlsx_to_csv(source_directory2, target_directory)
