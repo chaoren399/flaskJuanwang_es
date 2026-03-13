@@ -170,14 +170,13 @@ class CSVToElasticsearchImporter:
                 continue
 
             try:
-                # 使用 bulk  helpers 进行批量导入
-                # chunk_size 可以适当调大以提高吞吐量，例如 2000 或 5000
+                # 使用 bulk helpers 进行批量导入
+                # 移除了 request_timeout，因为它已在 ES 客户端初始化时设置
                 success, failed = bulk(
                     self.es,
                     actions,
                     chunk_size=2000,
-                    request_timeout=120,
-                    raise_on_error=False  # 防止单个错误中断整个批次
+                    raise_on_error=False
                 )
                 total_imported += success
                 total_failed += len(failed) if failed else 0
