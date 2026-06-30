@@ -4,11 +4,28 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk, parallel_bulk
 import logging
 import hashlib
+import re  # 新增导入
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+def clean_text(text):
+    """
+    清洗文本数据，移除 Emoji 等特殊字符，保留中文、英文、数字和常用标点
+    解决 Windows 控制台 GBK 编码无法处理特殊字符的问题
+    """
+    if not isinstance(text, str):
+        return text
+
+    # 保留范围：中文、英文、数字、常用标点符号、空格
+    # 移除 Emoji、特殊符号等多字节字符
+    cleaned = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9\.\-\(\)\s，。？！、；：""''…—_/\[\]]', '', text)
+    return cleaned.strip()
+
+
 
 
 class CSVToElasticsearchImporter:
@@ -92,6 +109,8 @@ class CSVToElasticsearchImporter:
         unique_string = f"{file_hash}_{data_str}"
         return hashlib.md5(unique_string.encode('utf-8')).hexdigest()
 
+
+
     def process_csv_to_bulk(self, file_path):
         """
         【优化版】将 CSV 文件处理成 bulk 操作格式
@@ -122,7 +141,9 @@ class CSVToElasticsearchImporter:
                             except:
                                 doc[col] = str(value)
                         else:
-                            doc[col] = str(value)
+                            # doc[col] = str(value)
+                            # 新增：清洗文本数据，移除 Emoji 等特殊字符
+                            doc[col] = clean_text(str(value))
 
                 doc['file_hash'] = file_hash
                 unique_id = self.generate_unique_id(doc, file_hash)

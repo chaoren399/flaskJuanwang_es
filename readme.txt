@@ -63,3 +63,8 @@ es:"8.14.1
 
 帮我写一个工具， 监控 目录 source_directory = r"E:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分\1-0-100"
 source_directory2 = r"E:\BaiduSyncdisk\7-花牛大叔\6-卷王-题材细分"  的修改时间，只要修改时间改变就 就触发 动作执行 run_all_tool.py
+
+
+-----2026年4月18日
+
+帮我整理下一山东省内所有的上市公司，以及他们的主营业务
